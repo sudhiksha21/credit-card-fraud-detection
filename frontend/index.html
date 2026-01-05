@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fraud Detection Console</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: "Courier New", monospace;
+    background: radial-gradient(circle at center, #0b0f14, #05070a);
+    color: #00ff9c;
+}
+
+.container {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== TERMINAL ===== */
+.terminal {
+    width: 650px;
+    padding: 66px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow:
+        0 0 25px rgba(0, 255, 156, 0.25),
+        inset 0 0 30px rgba(0, 255, 156, 0.1);
+    position: relative;
+    transition: transform 0.1s;
+}
+
+/* ===== SCAN LINES ===== */
+.terminal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        rgba(0,255,156,0.04) 50%,
+        transparent 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    animation: scan 6s linear infinite;
+}
+
+@keyframes scan {
+    from { background-position-y: 0; }
+    to { background-position-y: 100%; }
+}
+
+/* ===== HEADER ===== */
+.header {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 22px;
+    letter-spacing: 1px;
+}
+
+/* ===== INPUTS ===== */
+.field {
+    margin-bottom: 14px;
+}
+
+label {
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+    color: #7cffd4;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    background: black;
+    border: 1px solid #00ff9c;
+    border-radius: 4px;
+    color: #00ff9c;
+}
+
+input:focus {
+    outline: none;
+    box-shadow: 0 0 8px #00ff9c;
+}
+
+/* ===== BUTTON ===== */
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: #00ff9c;
+    border: none;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background: #00e68a;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress {
+    margin-top: 14px;
+    height: 6px;
+    background: #003b2a;
+    border-radius: 3px;
+    overflow: hidden;
+    display: none;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #00ff9c;
+    transition: width 0.15s linear;
+}
+
+/* ===== RESULT ===== */
+.result {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 4px;
+    text-align: center;
+    display: none;
+}
+
+.safe {
+    border: 1px solid #00ff9c;
+}
+
+.fraud {
+    border: 1px solid #ff4c4c;
+    color: #ff4c4c;
+    box-shadow: 0 0 15px rgba(255, 76, 76, 0.6);
+}
+
+/* ===== RED FLASH ===== */
+.flash {
+    animation: flash 0.4s ease-in-out 2;
+}
+
+@keyframes flash {
+    0% { background-color: rgba(255,0,0,0.15); }
+    100% { background-color: transparent; }
+}
+
+/* ===== SHAKE ===== */
+.shake {
+    animation: shake 0.2s linear 3;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-3px); }
+    100% { transform: translateX(0); }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div class="terminal" id="terminal">
+        <div class="header">█ FRAUD DETECTION CONSOLE █</div>
+
+        <div class="field">
+            <label>TRANSACTION AMOUNT</label>
+            <input id="amt" type="number" value="120.50">
+        </div>
+
+        <div class="field">
+            <label>CITY</label>
+            <input id="city" value="New York">
+        </div>
+
+        <div class="field">
+            <label>STATE</label>
+            <input id="state" value="NY">
+        </div>
+
+        <div class="field">
+            <label>ZIP CODE</label>
+            <input id="zip" value="10001">
+        </div>
+
+        <button onclick="predict()">EXECUTE SCAN</button>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="bar"></div>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+</div>
+
+<script>
+async function predict() {
+    const resultBox = document.getElementById("result");
+    const bar = document.getElementById("bar");
+    const progress = document.getElementById("progress");
+    const terminal = document.getElementById("terminal");
+
+    resultBox.style.display = "none";
+    progress.style.display = "block";
+    bar.style.width = "0%";
+
+    // fake scan animation
+    let percent = 0;
+    const scan = setInterval(() => {
+        percent += 5;
+        bar.style.width = percent + "%";
+        if (percent >= 100) clearInterval(scan);
+    }, 80);
+
+    const payload = {
+        category: "grocery_pos",
+        amt: parseFloat(document.getElementById("amt").value),
+        gender: "F",
+        city: document.getElementById("city").value,
+        state: document.getElementById("state").value,
+        zip: document.getElementById("zip").value,
+        lat: 40.7,
+        long: -74.0,
+        city_pop: 8000000,
+        unix_time: 1325376018,
+        merch_lat: 40.73,
+        merch_long: -73.93
+    };
+
+    const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    setTimeout(() => {
+        progress.style.display = "none";
+        resultBox.style.display = "block";
+
+        if (data.is_fraud === 1) {
+            terminal.classList.add("flash", "shake");
+            resultBox.className = "result fraud";
+            resultBox.innerHTML =
+                "⚠ STATUS: FRAUD DETECTED<br>RISK_SCORE: " +
+                data.fraud_probability;
+        } else {
+            resultBox.className = "result safe";
+            resultBox.innerHTML =
+                "✓ STATUS: SAFE<br>RISK_SCORE: " +
+                data.fraud_probability;
+        }
+    }, 1000);
+}
+</script>
+</body>
+</html>
